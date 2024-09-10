@@ -1,0 +1,5 @@
+RewriteEngine On
+RewriteBase /
+
+# Redirige cualquier cosa que siga a /sponsor/ al archivo ficherosactuales.php con el parámetro unique_url
+RewriteRule ^sponsor/([a-zA-Z0-9_-]+)$ ficherosactuales.php?unique_url=$1 [L,QSA]

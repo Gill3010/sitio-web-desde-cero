@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Archivos</title>
+    <style>
+        /* Estilos generales */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Formulario */
+        form {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        form input[type="file"] {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        form button {
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        form button:hover {
+            background-color: #2980b9;
+        }
+
+        /* Lista de archivos */
+        #fileList {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .file-item {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .file-item span {
+            font-size: 16px;
+            color: #2c3e50;
+        }
+
+        .file-item button {
+            background-color: #e74c3c;
+            color: #fff;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+            margin-left: 5px;
+        }
+
+        .file-item button:hover {
+            background-color: #c0392b;
+        }
+
+        .file-item button:first-of-type {
+            background-color: #2ecc71;
+        }
+
+        .file-item button:first-of-type:hover {
+            background-color: #27ae60;
+        }
+
+    </style>
+</head>
+<body>
+    <h2>Gestión de Archivos</h2>
+
+    <form enctype="multipart/form-data" id="uploadForm">
+        <input id="file" name="file" type="file" required>
+        <button type="submit">Subir Archivo</button>
+    </form>
+
+    <div id="fileList"></div>
+
+    <script>
+        const apiUrl = '/api'; // Cambia esto a la URL de tu API
+
+        // Subir archivo
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData();
+            formData.append('file', document.getElementById('file').files[0]);
+
+            fetch(`${apiUrl}/files`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('jwt') // Asegúrate de que el JWT esté guardado en localStorage
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message === 'Archivo subido con éxito.') {
+                    alert('Archivo subido con éxito.');
+                    loadFiles(); // Actualiza la lista de archivos
+                } else {
+                    alert('Error al subir el archivo: ' + data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        // Listar archivos
+        function loadFiles() {
+            fetch(`${apiUrl}/files`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('jwt') // Asegúrate de que el JWT esté guardado en localStorage
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const fileList = document.getElementById('fileList');
+                fileList.innerHTML = '';
+                data.forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+                    fileItem.innerHTML = `
+                        <span>${file.file_path}</span>
+                        <div>
+                            <button onclick="downloadFile(${file.file_id})">Descargar</button>
+                            <button onclick="deleteFile(${file.file_id})">Eliminar</button>
+                        </div>
+                    `;
+                    fileList.appendChild(fileItem);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Descargar archivo
+        function downloadFile(fileId) {
+            fetch(`${apiUrl}/files/${fileId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('jwt') // Asegúrate de que el JWT esté guardado en localStorage
+                }
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `file_${fileId}`; // Cambia el nombre del archivo si es necesario
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Eliminar archivo
+        function deleteFile(fileId) {
+            fetch(`${apiUrl}/files/${fileId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('jwt') // Asegúrate de que el JWT esté guardado en localStorage
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message === 'Archivo eliminado con éxito.') {
+                    alert('Archivo eliminado con éxito.');
+                    loadFiles(); // Actualiza la lista de archivos
+                } else {
+                    alert('Error al eliminar el archivo: ' + data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Cargar archivos al iniciar
+        window.onload = loadFiles;
+    </script>
+</body>
+</html>

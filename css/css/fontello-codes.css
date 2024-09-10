@@ -1,0 +1,5 @@
+
+.icon-inicio:before { content: '\e800'; } /* '' */
+.icon-audio:before { content: '\e801'; } /* '' */
+.icon-texto-1:before { content: '\f0f6'; } /* '' */
+.icon-texto:before { content: '\f15c'; } /* '' */

@@ -1,0 +1,27 @@
+.text-center{
+    text-align: center;
+}
+.imagen1{
+    width: 200px;
+    height: 100px;
+    display:block;
+    margin:auto;
+}
+.imagen2{
+    width: 200px;
+    height: 100px;
+}
+.imagen3{
+    width: 200px;
+    height: 100px;
+    float: right;
+}
+.imagen4{
+    width: 200px;
+    height: 100px;
+    display:block;
+    margin:auto;
+}
+.text-centro{
+    text-align: center;
+}
